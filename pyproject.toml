@@ -1,0 +1,11 @@
+[project]
+name = "vercel-flask-starter"
+version = "0.1.0"
+requires-python = ">=3.9"
+dependencies = [
+  "dotenv>=0.9.9",
+  "flask>=3.1,<4.0",
+  "gunicorn~=23.0.0",
+  "openai>=2.3.0",
+  "vercel>=0.3.0",
+]
