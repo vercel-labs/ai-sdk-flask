@@ -4,5 +4,6 @@ version = "0.1.0"
 requires-python = ">=3.9"
 dependencies = [
   "flask>=3.1,<4.0",
-  "gunicorn~=23.0.0"
+  "gunicorn~=23.0.0",
+  "openai>=2.3.0",
 ]
