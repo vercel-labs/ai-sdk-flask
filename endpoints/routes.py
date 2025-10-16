@@ -46,10 +46,10 @@ DEFAULT_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 
 @api_bp.post("/api/chat")
 def stream_chat_completion():
-    api_key = os.getenv("OPENAI_API_KEY")
+    # api_key = os.getenv("OPENAI_API_KEY")
     oidc_token = os.getenv("OIDC_TOKEN")
-    if not api_key:
-        return jsonify({"error": "OpenAI API key is not configured."}), 500
+    # if not api_key:
+    #     return jsonify({"error": "OpenAI API key is not configured."}), 500
     openai_client = OpenAI(api_key=oidc_token, base_url="https://ai-gateway.vercel.sh/v1")
 
     payload = request.get_json(silent=True) or {}
