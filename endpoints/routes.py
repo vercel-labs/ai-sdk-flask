@@ -1,56 +1,19 @@
-
 import json
 import os
-from pathlib import Path
-
+from dotenv import load_dotenv
 from flask import Blueprint, Response, jsonify, request, stream_with_context
-from openai import OpenAI, base_url
+from openai import OpenAI
 
-
-def _load_env_from_file(filename: str) -> None:
-    base_dir = Path(__file__).resolve().parent.parent
-    env_path = base_dir / filename
-    if not env_path.exists():
-        return
-
-    for raw_line in env_path.read_text().splitlines():
-        line = raw_line.strip()
-        if not line or line.startswith("#"):
-            continue
-
-        if line.startswith("export "):
-            line = line[len("export ") :]
-
-        if "=" not in line:
-            continue
-
-        key, value = line.split("=", 1)
-        key = key.strip()
-        value = value.strip()
-
-        if value and value[0] == value[-1] and value[0] in {'"', "'"}:
-            value = value[1:-1]
-
-        os.environ.setdefault(key, value)
-
-
-_load_env_from_file(".env.local")
-_load_env_from_file(".env")
-
+load_dotenv(".env.local")
 
 api_bp = Blueprint("api", __name__)
 
 DEFAULT_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
-
+openai_client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"), base_url="https://ai-gateway.vercel.sh/v1")
 
 
 @api_bp.post("/api/chat")
 def stream_chat_completion():
-    api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key:
-        return jsonify({"error": "OpenAI API key is not configured."}), 500
-    openai_client = OpenAI(api_key=api_key, base_url="https://ai-gateway.vercel.sh/v1")
-
     payload = request.get_json(silent=True) or {}
     raw_messages = payload.get("messages")
     messages_payload = None
