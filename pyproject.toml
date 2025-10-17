@@ -8,5 +8,4 @@ dependencies = [
   "gunicorn~=23.0.0",
   "openai>=2.3.0",
   "vercel>=0.3.0",
-  "vercel-sdk>=0.0.8",
 ]

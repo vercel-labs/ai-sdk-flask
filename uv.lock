@@ -657,7 +657,6 @@ dependencies = [
     { name = "gunicorn" },
     { name = "openai" },
     { name = "vercel" },
-    { name = "vercel-sdk" },
 ]
 
 [package.metadata]
@@ -667,7 +666,6 @@ requires-dist = [
     { name = "gunicorn", specifier = "~=23.0.0" },
     { name = "openai", specifier = ">=2.3.0" },
     { name = "vercel", specifier = ">=0.3.0" },
-    { name = "vercel-sdk", specifier = ">=0.0.8" },
 ]
 
 [[package]]
