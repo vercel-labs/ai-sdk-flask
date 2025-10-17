@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import time
+from typing import Any, Iterator
 from dotenv import load_dotenv
 from flask import Blueprint, Response, jsonify, request, stream_with_context
 from openai import OpenAI
@@ -11,7 +12,7 @@ load_dotenv(".env.local")
 
 api_bp = Blueprint("api", __name__)
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 if not logger.handlers:
     handler = logging.StreamHandler()
     handler.setFormatter(logging.Formatter("%(levelname)s:%(name)s:%(message)s"))
@@ -20,125 +21,62 @@ if not logger.handlers:
 logger.setLevel(logging.INFO)
 logger.propagate = False
 
-DEFAULT_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+DEFAULT_MODEL: str = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 
 @api_bp.post("/api/chat")
-def stream_chat_completion():
-    payload = request.get_json(silent=True) or {}
-    logger.info("Received /api/chat request with keys=%s", sorted(payload.keys()))
-
-    try:
-        api_token = get_vercel_oidc_token()
-    except Exception:
-        logger.exception("Failed to acquire Vercel OIDC token for chat request")
-        return jsonify({"error": "Unable to authenticate with AI Gateway"}), 500
-
-    openai_client = OpenAI(
-        api_key=api_token,
-        base_url="https://ai-gateway.vercel.sh/v1",
-    )
-
-    raw_messages = payload.get("messages")
-    messages_payload = None
-
-    if raw_messages:
-        normalized_messages = []
-        for message in raw_messages:
-            role = message.get("role", "user")
-            content = message.get("content", "")
-
-            if isinstance(content, list):
-                normalized_content = []
-                for item in content:
-                    if isinstance(item, dict):
-                        normalized_content.append(item)
-                    elif isinstance(item, str):
-                        normalized_content.append({"type": "text", "text": item})
-                    else:
-                        normalized_content.append(
-                            {"type": "text", "text": json.dumps(item)}
-                        )
-            elif isinstance(content, str):
-                normalized_content = content
-            else:
-                normalized_content = json.dumps(content)
-
-            normalized_messages.append(
-                {
-                    "role": role,
-                    "content": normalized_content,
-                }
-            )
-
-        messages_payload = normalized_messages
+def stream_chat_completion() -> Response:
+    payload: dict[str, Any] = request.get_json(silent=True) or {}
+    messages_input: Any = payload.get("messages")
+    messages: list[dict[str, Any]]
+    if isinstance(messages_input, list):
+        messages = messages_input
     else:
-        prompt = payload.get("prompt")
-        if prompt:
-            logger.debug("Using fallback prompt payload for chat request")
-            messages_payload = [{"role": "user", "content": prompt}]
-        else:
-            logger.warning("Rejected /api/chat request missing both messages and prompt")
-            return jsonify({"error": "Provide either `messages` or `prompt`."}), 400
+        messages = []
 
-    model = payload.get("model", DEFAULT_MODEL)
-    message_count = len(messages_payload) if isinstance(messages_payload, list) else 1
-    logger.info(
-        "Preparing chat completion request model=%s message_count=%s",
-        model,
-        message_count,
-    )
+    model: str = payload.get("model", DEFAULT_MODEL)
+
+    if not messages:
+        prompt: Any = payload.get("prompt")
+        if not prompt:
+            return jsonify({"error": "Provide `messages` or `prompt`."}), 400
+        messages = [{"role": "user", "content": prompt}]
 
     try:
-        stream = openai_client.chat.completions.create(
-            model=model,
-            messages=messages_payload,
-            stream=True,
+        client: OpenAI = OpenAI(
+            api_key=get_vercel_oidc_token(),
+            base_url="https://ai-gateway.vercel.sh/v1",
         )
     except Exception:
-        logger.exception("OpenAI chat completion request failed to initialize")
-        return jsonify({"error": "Unable to initiate model stream"}), 502
+        logger.exception("Failed to acquire AI Gateway credentials")
+        return jsonify({"error": "Unable to authenticate with AI Gateway"}), 500
 
-    def event_stream():
+    def event_stream() -> Iterator[str]:
         try:
+            stream = client.chat.completions.create(
+                model=model,
+                messages=messages,
+                stream=True,
+            )
             for chunk in stream:
-                if not chunk.choices:
-                    continue
-
-                choice = chunk.choices[0]
-                delta = getattr(choice, "delta", None)
-                text = None
-
-                if delta:
-                    content = getattr(delta, "content", None)
-                    if isinstance(content, list):
-                        parts = []
-                        for item in content:
-                            if isinstance(item, dict):
-                                parts.append(item.get("text", ""))
-                            elif isinstance(item, str):
-                                parts.append(item)
-                            else:
-                                parts.append(str(item))
-                        text = "".join(parts)
-                    elif isinstance(content, str):
-                        text = content
-
-                if text:
-                    yield f"data: {json.dumps({'type': 'token', 'text': text})}\n\n"
-
-                if getattr(choice, "finish_reason", None):
-                    logger.info(
-                        "OpenAI stream completed with finish_reason=%s",
-                        getattr(choice, "finish_reason", None),
+                payload_chunk: str
+                if hasattr(chunk, "model_dump_json"):
+                    payload_chunk = chunk.model_dump_json(exclude_unset=True)  # type: ignore[attr-defined]
+                elif hasattr(chunk, "model_dump"):
+                    payload_chunk = json.dumps(
+                        getattr(chunk, "model_dump")(exclude_unset=True)  # type: ignore[attr-defined]
                     )
-                    break
+                else:
+                    try:
+                        payload_chunk = json.dumps(chunk)  # type: ignore[arg-type]
+                    except TypeError:
+                        payload_chunk = str(chunk)
 
-            yield f"data: {json.dumps({'type': 'done'})}\n\n"
+                yield f"data: {payload_chunk}\n\n"
         except Exception as exc:
-            logger.exception("Error while streaming chat completion tokens")
+            logger.exception("Error while streaming chat completion")
             yield f"data: {json.dumps({'type': 'error', 'message': str(exc)})}\n\n"
 
-    headers = {
+    headers: dict[str, str] = {
         "Content-Type": "text/event-stream",
         "Cache-Control": "no-cache",
         "Connection": "keep-alive",
@@ -147,21 +85,21 @@ def stream_chat_completion():
 
 
 @api_bp.get("/api/lorem")
-def stream_lorem_ipsum():
+def stream_lorem_ipsum() -> Response:
     logger.info("Received /api/lorem request")
 
-    lorem_text = (
+    lorem_text: str = (
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor "
         "incididunt ut labore et dolore magna aliqua."
     )
 
-    def generate():
-        end_time = time.monotonic() + 60
+    def generate() -> Iterator[str]:
+        end_time: float = time.monotonic() + 60
         while time.monotonic() < end_time:
             yield lorem_text + "\n"
             time.sleep(1)
 
-    headers = {
+    headers: dict[str, str] = {
         "Content-Type": "text/plain; charset=utf-8",
         "Cache-Control": "no-cache",
         "Connection": "keep-alive",
