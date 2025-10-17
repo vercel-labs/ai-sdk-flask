@@ -632,6 +632,22 @@ wheels = [
 ]
 
 [[package]]
+name = "vercel"
+version = "0.3.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "anyio" },
+    { name = "httpx" },
+    { name = "pydantic" },
+    { name = "python-dotenv" },
+    { name = "vercel-sandbox" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/a4/f2/b8d08acceb902587d2a5f2015817b3a73d201d9be8c3b21f4d6e1917431e/vercel-0.3.0.tar.gz", hash = "sha256:9532fc09ea20ecc826d63e1f9c9785fce529c90327a7a57fb9aee4fac652e48b", size = 31196, upload-time = "2025-10-17T18:32:52.443Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/28/5f/1c4b8435e344cebf3ac252608871cd3da0635278d6eb377865b170133b30/vercel-0.3.0-py3-none-any.whl", hash = "sha256:c8bbd305aa0a67661e4c6756c176473c73c93d6db16da1c174f1babfe658fa56", size = 40728, upload-time = "2025-10-17T18:32:51.375Z" },
+]
+
+[[package]]
 name = "vercel-flask-starter"
 version = "0.1.0"
 source = { virtual = "." }
@@ -640,6 +656,7 @@ dependencies = [
     { name = "flask" },
     { name = "gunicorn" },
     { name = "openai" },
+    { name = "vercel" },
     { name = "vercel-sdk" },
 ]
 
@@ -649,6 +666,7 @@ requires-dist = [
     { name = "flask", specifier = ">=3.1,<4.0" },
     { name = "gunicorn", specifier = "~=23.0.0" },
     { name = "openai", specifier = ">=2.3.0" },
+    { name = "vercel", specifier = ">=0.3.0" },
     { name = "vercel-sdk", specifier = ">=0.0.8" },
 ]
 

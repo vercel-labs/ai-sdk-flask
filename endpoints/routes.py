@@ -10,11 +10,12 @@ load_dotenv(".env.local")
 api_bp = Blueprint("api", __name__)
 
 DEFAULT_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
-openai_client = OpenAI(api_key=get_vercel_oidc_token(), base_url="https://ai-gateway.vercel.sh/v1")
 
 
 @api_bp.post("/api/chat")
 def stream_chat_completion():
+    openai_client = OpenAI(api_key=get_vercel_oidc_token(), base_url="https://ai-gateway.vercel.sh/v1")
+
     payload = request.get_json(silent=True) or {}
     raw_messages = payload.get("messages")
     messages_payload = None
