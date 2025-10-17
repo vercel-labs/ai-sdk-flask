@@ -1,9 +1,7 @@
-import os
-import json
 from flask import Blueprint,  Response, request, stream_with_context
 from openai import OpenAI
 from dotenv import load_dotenv
-from openai.lib.streaming.chat import ChatCompletionStreamManager
+from vercel.oidc import get_vercel_oidc_token
 
 load_dotenv(".env.local")
 
@@ -11,7 +9,7 @@ api_bp = Blueprint("api", __name__)
 
 @api_bp.route("/api/chat", methods=["POST"])
 def chat():
-    client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+    client = OpenAI(api_key=get_vercel_oidc_token(), base_url="https://ai-gateway.vercel.sh/v1")
 
     data = request.get_json()
     user_message = data.get("message", "")
