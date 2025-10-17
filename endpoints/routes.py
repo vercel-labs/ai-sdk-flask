@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import time
 from dotenv import load_dotenv
 from flask import Blueprint, Response, jsonify, request, stream_with_context
 from openai import OpenAI
@@ -143,3 +144,26 @@ def stream_chat_completion():
         "Connection": "keep-alive",
     }
     return Response(stream_with_context(event_stream()), headers=headers)
+
+
+@api_bp.get("/api/lorem")
+def stream_lorem_ipsum():
+    logger.info("Received /api/lorem request")
+
+    lorem_text = (
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor "
+        "incididunt ut labore et dolore magna aliqua."
+    )
+
+    def generate():
+        end_time = time.monotonic() + 60
+        while time.monotonic() < end_time:
+            yield lorem_text + "\n"
+            time.sleep(1)
+
+    headers = {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "no-cache",
+        "Connection": "keep-alive",
+    }
+    return Response(stream_with_context(generate()), headers=headers)
