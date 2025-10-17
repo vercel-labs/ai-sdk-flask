@@ -18,7 +18,7 @@ def chat():
     def generate():
         with client.chat.completions.stream(
             model="gpt-4o-mini",
-            messages=[{"role": "user", "content": user_message}],
+            messages=[{"role": "user", "content": "why is the sky blue?"}],
         ) as stream:
             for event in stream:
                 yield(event.type + "\n")
