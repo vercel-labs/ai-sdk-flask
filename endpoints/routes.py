@@ -43,8 +43,8 @@ def stream_chat_completion() -> Response:
 
     try:
         client: OpenAI = OpenAI(
-            api_key=get_vercel_oidc_token(),
-            base_url="https://ai-gateway.vercel.sh/v1",
+            api_key=os.getenv("OPENAI_API_KEY"),
+            # base_url="https://ai-gateway.vercel.sh/v1",
         )
     except Exception:
         logger.exception("Failed to acquire AI Gateway credentials")
