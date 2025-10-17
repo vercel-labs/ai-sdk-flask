@@ -23,6 +23,6 @@ def chat():
             messages=[{"role": "user", "content": user_message}],
         ) as stream:
             for event in stream:
-                yield(json.dumps(event))
+                yield(event.type + "\n")
 
     return Response(stream_with_context(generate()), content_type="text/plain")
