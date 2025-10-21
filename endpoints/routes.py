@@ -1,26 +1,25 @@
-from flask import Blueprint,  Response, request, stream_with_context
+from flask import Blueprint, Response, request
 from openai import OpenAI
 from dotenv import load_dotenv
-from vercel.oidc import get_vercel_oidc_token
+from vercel import oidc
 
 load_dotenv(".env.local")
 
 api_bp = Blueprint("api", __name__)
 
-@api_bp.route("/api/chat", methods=["POST"])
+@api_bp.route("/api/generate", methods=["POST"])
 def chat():
-    client = OpenAI(api_key=get_vercel_oidc_token(), base_url="https://ai-gateway.vercel.sh/v1")
+    client = OpenAI(api_key=oidc.get_vercel_oidc_token(), base_url="https://ai-gateway.vercel.sh/v1")
 
-    data = request.get_json()
-    user_message = data.get("message", "")
+    prompt = request.args.get("prompt")
+    if not prompt:
+        return Response("Missing 'prompt' query parameter.", status=400, content_type="text/plain")
 
-    # Create a streaming response
-    def generate():
-        with client.chat.completions.stream(
-            model="gpt-4o-mini",
-            messages=[{"role": "user", "content": "why is the sky blue?"}],
-        ) as stream:
-            for event in stream:
-                yield(event.type + "\n")
+    completion = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "user", "content": prompt}],
+    )
 
-    return Response(stream_with_context(generate()), content_type="text/plain")
+    message_content = completion.choices[0].message["content"]
+
+    return Response(message_content, content_type="text/plain")
