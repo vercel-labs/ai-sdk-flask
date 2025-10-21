@@ -7,7 +7,7 @@ load_dotenv(".env.local")
 
 api_bp = Blueprint("api", __name__)
 
-@api_bp.route("/api/generate", methods=["POST"])
+@api_bp.route("/api/generate", methods=["GET"])
 def chat():
     client = OpenAI(api_key=oidc.get_vercel_oidc_token(), base_url="https://ai-gateway.vercel.sh/v1")
 
