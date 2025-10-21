@@ -20,6 +20,7 @@ def chat():
         messages=[{"role": "user", "content": prompt}],
     )
 
-    message_content = completion.choices[0].message["content"]
+    message = completion.choices[0].message
+    message_content = getattr(message, "content", "") if message else ""
 
     return Response(message_content, content_type="text/plain")
