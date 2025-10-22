@@ -1,4 +1,4 @@
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel-labs%2Fai-sdk-flask%2F%26demo-title%3DAI%20SDK%20and%20Flask%20API%26demo-description%3DUse%20Flask%20API%20and%20AI%20SDK%20on%20Vercel%20with%20Serverless%20Functions%20using%20the%20Python%20Runtime.%26demo-url%3Dhttps%3A%2F%2Fai-sdk-preview-flask.vercel.app%26demo-image%3Dhttps%3A%2F%2Fassets.vercel.com%2Fimage%2Fupload%2Fv1669994600%2Frandom%2Fpython.png)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel-labs%2Fai-sdk-flask&project-name=ai-sdk-flask&repository-name=ai-sdk-flask&demo-title=AI%20SDK%20and%20Flask%20API&demo-description=Use%20Flask%20API%20and%20AI%20SDK%20on%20Vercel%20with%20Serverless%20Functions%20using%20the%20Python%20Runtime.&demo-url=https%3A%2F%2Fai-sdk-preview-flask.vercel.app&demo-image=https%3A%2F%2Fassets.vercel.com%2Fimage%2Fupload%2Fv1669994600%2Frandom%2Fpython.png)
 
 # Flask + Vercel
 
